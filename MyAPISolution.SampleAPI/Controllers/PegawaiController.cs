@@ -31,6 +31,7 @@ namespace MyAPISolution.SampleAPI.Controllers
         public IActionResult Get(int Id)
         {
             Pegawai result = listPegawai.FirstOrDefault(x => x.IdPegawai == Id);
+
             if (result == null)
                 return NotFound(new CustomError { ResponseCode = "404", Message = "Data tidak ditemukan" });
 
@@ -39,14 +40,25 @@ namespace MyAPISolution.SampleAPI.Controllers
 
         // POST api/<PegawaiController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public IActionResult Post([FromBody] Pegawai pegawai)
         {
+            listPegawai.Add(pegawai);
+            return CreatedAtAction(nameof(Get), new { Id = pegawai.IdPegawai }, pegawai);
         }
 
         // PUT api/<PegawaiController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public IActionResult Put(int id, [FromBody] Pegawai pegawai)
         {
+            Pegawai existingPegawai = listPegawai.FirstOrDefault(x => x.IdPegawai == id);
+            if (existingPegawai == null)
+                return NotFound(new CustomError { ResponseCode = "404", Message = "Data tidak ditemukan" });
+
+            existingPegawai.Nama = pegawai.Nama;
+            existingPegawai.Alamat = pegawai.Alamat;
+            existingPegawai.Email = pegawai.Email;
+
+            return NoContent();
         }
 
         // DELETE api/<PegawaiController>/5
