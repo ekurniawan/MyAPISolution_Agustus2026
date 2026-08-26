@@ -1,0 +1,6 @@
+@MyAPISolution.SampleAPI_HostAddress = https://localhost:7208
+
+GET {{MyAPISolution.SampleAPI_HostAddress}}
+Accept: application/json
+
+###
