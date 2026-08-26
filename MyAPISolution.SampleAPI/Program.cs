@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using MyAPISolution.SampleAPI.DAL;
+using MyAPISolution.SampleAPI.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -7,6 +11,12 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+//add entity framework core
+builder.Services.AddDbContext<RapidDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<ICategoryDAL, CategoryMockDAL>();
 
 var app = builder.Build();
 

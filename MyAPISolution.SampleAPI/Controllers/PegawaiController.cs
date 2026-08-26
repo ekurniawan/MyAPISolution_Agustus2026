@@ -63,8 +63,13 @@ namespace MyAPISolution.SampleAPI.Controllers
 
         // DELETE api/<PegawaiController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+            Pegawai existingPegawai = listPegawai.FirstOrDefault(x => x.IdPegawai == id);
+            if (existingPegawai == null)
+                return NotFound(new CustomError { ResponseCode = "404", Message = "Data tidak ditemukan" });
+            listPegawai.Remove(existingPegawai);
+            return NoContent();
         }
     }
 }
