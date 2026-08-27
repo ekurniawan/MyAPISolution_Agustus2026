@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using MyAPISolution.SampleAPI.DAL;
+using MyAPISolution.SampleAPI.DTO;
 using MyAPISolution.SampleAPI.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -11,10 +13,12 @@ namespace MyAPISolution.SampleAPI.Controllers
     public class CategoriesController : ControllerBase
     {
         private readonly ICategoryDAL _categoryDAL;
+        private readonly IMapper _mapper;
 
-        public CategoriesController(ICategoryDAL categoryDAL)
+        public CategoriesController(ICategoryDAL categoryDAL, IMapper mapper)
         {
             _categoryDAL = categoryDAL;
+            _mapper = mapper;
         }
 
         // GET: api/<CategoriesController>
@@ -23,8 +27,21 @@ namespace MyAPISolution.SampleAPI.Controllers
         {
             try
             {
+                /*var categories = await _categoryDAL.GetAllCategories();
+                List<CategoryDTO> categoryDTOs = new List<CategoryDTO>();
+                foreach (var category in categories)
+                {
+                    categoryDTOs.Add(new CategoryDTO
+                    {
+                        CategoryId = category.CategoryId,
+                        CategoryName = category.CategoryName
+                    });
+                }
+
+                return Ok(categoryDTOs);*/
                 var categories = await _categoryDAL.GetAllCategories();
-                return Ok(categories);
+                var categoryDTOs = _mapper.Map<List<CategoryDTO>>(categories);
+                return Ok(categoryDTOs);
             }
             catch (Exception ex)
             {
@@ -39,11 +56,19 @@ namespace MyAPISolution.SampleAPI.Controllers
             try
             {
                 var category = await _categoryDAL.GetCategoryById(id);
+               
                 if (category == null)
                 {
                     return NotFound();
                 }
-                return Ok(category);
+
+                CategoryDTO categoryDTO = new CategoryDTO
+                {
+                    CategoryId = category.CategoryId,
+                    CategoryName = category.CategoryName
+                };
+
+                return Ok(categoryDTO);
             }
             catch (Exception ex)
             {
@@ -53,12 +78,26 @@ namespace MyAPISolution.SampleAPI.Controllers
 
         // POST api/<CategoriesController>
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Category category)
+        public async Task<IActionResult> Post([FromBody] CategoryInsertDTO categoryInsertDTO)
         {
             try
             {
-                var createdCategory = await _categoryDAL.CreateCategory(category);
-                return CreatedAtAction(nameof(Get), new { id = createdCategory.CategoryId }, createdCategory);
+                if (ModelState.IsValid) {
+                    var createdCategory = await _categoryDAL.CreateCategory(new Category
+                    {
+                        CategoryName = categoryInsertDTO.CategoryName
+                    });
+                    var createdCategoryDTO = new CategoryDTO
+                    {
+                        CategoryId = createdCategory.CategoryId,
+                        CategoryName = createdCategory.CategoryName
+                    };
+                    return CreatedAtAction(nameof(Get), new { id = createdCategoryDTO.CategoryId }, createdCategoryDTO);
+                }
+                else
+                {
+                    return BadRequest(ModelState);
+                }
             }
             catch (Exception ex)
             {
@@ -68,16 +107,25 @@ namespace MyAPISolution.SampleAPI.Controllers
 
         // PUT api/<CategoriesController>/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] Category category)
+        public async Task<IActionResult> Put(int id, [FromBody] CategoryEditDTO categoryEditDTO)
         {
             try
             {
-                var updatedCategory = await _categoryDAL.UpdateCategory(category);
+                var updatedCategory = await _categoryDAL.UpdateCategory(new Category
+                {
+                    CategoryId = id,
+                    CategoryName = categoryEditDTO.CategoryName
+                });
                 if (updatedCategory == null)
                 {
                     return NotFound();
                 }
-                return Ok(updatedCategory);
+                var categoryDto = new CategoryDTO
+                {
+                    CategoryId = updatedCategory.CategoryId,
+                    CategoryName = updatedCategory.CategoryName
+                };
+                return Ok(categoryDto);
             }
             catch (Exception ex)
             {
