@@ -55,7 +55,7 @@ namespace MyAPISolution.SampleAPI.Controllers
         {
             try
             {
-                var category = await _categoryDAL.GetCategoryById(id);
+                /*var category = await _categoryDAL.GetCategoryById(id);
                
                 if (category == null)
                 {
@@ -68,6 +68,13 @@ namespace MyAPISolution.SampleAPI.Controllers
                     CategoryName = category.CategoryName
                 };
 
+                return Ok(categoryDTO);*/
+                var category = await _categoryDAL.GetCategoryById(id);
+                if (category == null)
+                {
+                    return NotFound();
+                }
+                var categoryDTO = _mapper.Map<CategoryDTO>(category);
                 return Ok(categoryDTO);
             }
             catch (Exception ex)
@@ -83,7 +90,7 @@ namespace MyAPISolution.SampleAPI.Controllers
             try
             {
                 if (ModelState.IsValid) {
-                    var createdCategory = await _categoryDAL.CreateCategory(new Category
+                    /*var createdCategory = await _categoryDAL.CreateCategory(new Category
                     {
                         CategoryName = categoryInsertDTO.CategoryName
                     });
@@ -92,6 +99,10 @@ namespace MyAPISolution.SampleAPI.Controllers
                         CategoryId = createdCategory.CategoryId,
                         CategoryName = createdCategory.CategoryName
                     };
+                    return CreatedAtAction(nameof(Get), new { id = createdCategoryDTO.CategoryId }, createdCategoryDTO);*/
+                    var category = _mapper.Map<Category>(categoryInsertDTO);
+                    var createdCategory = await _categoryDAL.CreateCategory(category);
+                    var createdCategoryDTO = _mapper.Map<CategoryDTO>(createdCategory);
                     return CreatedAtAction(nameof(Get), new { id = createdCategoryDTO.CategoryId }, createdCategoryDTO);
                 }
                 else
@@ -111,7 +122,7 @@ namespace MyAPISolution.SampleAPI.Controllers
         {
             try
             {
-                var updatedCategory = await _categoryDAL.UpdateCategory(new Category
+                /*var updatedCategory = await _categoryDAL.UpdateCategory(new Category
                 {
                     CategoryId = id,
                     CategoryName = categoryEditDTO.CategoryName
@@ -125,7 +136,23 @@ namespace MyAPISolution.SampleAPI.Controllers
                     CategoryId = updatedCategory.CategoryId,
                     CategoryName = updatedCategory.CategoryName
                 };
-                return Ok(categoryDto);
+                return Ok(categoryDto);*/
+                if (ModelState.IsValid)
+                {
+                    var category = _mapper.Map<Category>(categoryEditDTO);
+                    var updateCategory = await _categoryDAL.UpdateCategory(category);
+                    
+                    if (updateCategory != null) { 
+                        return NotFound();
+                    }
+                    var categoryDto = _mapper.Map<CategoryDTO>(categoryEditDTO);
+                    return Ok(categoryDto);
+                }
+                else
+                {
+                    return BadRequest(ModelState);
+                }
+
             }
             catch (Exception ex)
             {
