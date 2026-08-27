@@ -19,16 +19,36 @@ namespace MyAPISolution.SampleAPI.Controllers
 
         // GET: api/<CategoriesController>
         [HttpGet]
-        public async Task<IEnumerable<Category>> Get()
+        public async Task<IActionResult> Get()
         {
-            return await _categoryDAL.GetAllCategories();
+            try
+            {
+                var categories = await _categoryDAL.GetAllCategories();
+                return Ok(categories);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // GET api/<CategoriesController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            return "value";
+            try
+            {
+                var category = await _categoryDAL.GetCategoryById(id);
+                if (category == null)
+                {
+                    return NotFound();
+                }
+                return Ok(category);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // POST api/<CategoriesController>

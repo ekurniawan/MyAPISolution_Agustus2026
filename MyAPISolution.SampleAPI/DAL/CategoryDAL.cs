@@ -28,15 +28,24 @@ namespace MyAPISolution.SampleAPI.DAL
                 var result = await _rapidDbContext.Categories.OrderBy(c=>c.CategoryName).ToListAsync();
                 return result;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                throw new Exception("Error retrieving all categories", ex);
             }
         }
 
-        public Task<Category> GetCategoryById(int id)
+        public async Task<Category> GetCategoryById(int id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var result = await _rapidDbContext.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
+                
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error retrieving category by ID", ex);
+            }
         }
 
         public Task<Category> UpdateCategory(Category category)

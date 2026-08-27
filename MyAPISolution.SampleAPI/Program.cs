@@ -16,7 +16,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<RapidDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<ICategoryDAL, CategoryMockDAL>();
+builder.Services.AddScoped<ICategoryDAL, CategoryDAL>();
 
 var app = builder.Build();
 
