@@ -53,20 +53,55 @@ namespace MyAPISolution.SampleAPI.Controllers
 
         // POST api/<CategoriesController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<IActionResult> Post([FromBody] Category category)
         {
+            try
+            {
+                var createdCategory = await _categoryDAL.CreateCategory(category);
+                return CreatedAtAction(nameof(Get), new { id = createdCategory.CategoryId }, createdCategory);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // PUT api/<CategoriesController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public async Task<IActionResult> Put(int id, [FromBody] Category category)
         {
+            try
+            {
+                var updatedCategory = await _categoryDAL.UpdateCategory(category);
+                if (updatedCategory == null)
+                {
+                    return NotFound();
+                }
+                return Ok(updatedCategory);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // DELETE api/<CategoriesController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            try
+            {
+                var deletedCategory = await _categoryDAL.DeleteCategory(id);
+                if (deletedCategory == null)
+                {
+                    return NotFound();
+                }
+                return Ok(deletedCategory);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

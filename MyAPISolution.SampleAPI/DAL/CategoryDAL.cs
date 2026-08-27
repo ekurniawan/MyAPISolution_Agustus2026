@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MyAPISolution.SampleAPI.Models;
 
 namespace MyAPISolution.SampleAPI.DAL
@@ -11,21 +12,44 @@ namespace MyAPISolution.SampleAPI.DAL
             _rapidDbContext = rapidDbContext;
         }
 
-        public Task<Category> CreateCategory(Category category)
+        public async Task<Category> CreateCategory(Category category)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _rapidDbContext.Categories.Add(category);
+                await _rapidDbContext.SaveChangesAsync();
+                return category;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error creating category", ex);
+            }
         }
 
-        public Task<Category> DeleteCategory(int id)
+        public async Task<Category> DeleteCategory(int id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var category = await _rapidDbContext.Categories.FindAsync(id);
+                if (category == null)
+                {
+                    throw new Exception("Category not found");
+                }
+                _rapidDbContext.Categories.Remove(category);
+                await _rapidDbContext.SaveChangesAsync();
+                return category;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error deleting category", ex);
+            }
         }
 
         public async Task<IEnumerable<Category>> GetAllCategories()
         {
             try
             {
-                var result = await _rapidDbContext.Categories.OrderBy(c=>c.CategoryName).ToListAsync();
+                var result = await _rapidDbContext.Categories.OrderBy(c=>c.CategoryName).AsNoTracking().ToListAsync();
                 return result;
             }
             catch (Exception ex)
@@ -38,7 +62,7 @@ namespace MyAPISolution.SampleAPI.DAL
         {
             try
             {
-                var result = await _rapidDbContext.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
+                var result = await _rapidDbContext.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.CategoryId == id);
                 
                 return result;
             }
@@ -48,9 +72,18 @@ namespace MyAPISolution.SampleAPI.DAL
             }
         }
 
-        public Task<Category> UpdateCategory(Category category)
+        public async Task<Category> UpdateCategory(Category category)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _rapidDbContext.Categories.Update(category);
+                await _rapidDbContext.SaveChangesAsync();
+                return category;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error updating category", ex);
+            }
         }
     }
 }
