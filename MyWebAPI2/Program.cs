@@ -16,6 +16,13 @@ builder.Services.Configure<AppSettings>(appSettingsSection);
 var appSettings = appSettingsSection.Get<AppSettings>();
 var key = Encoding.ASCII.GetBytes(appSettings.Secret);
 
+//add policy
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ReadPolicy", policy => policy.RequireClaim("readonly"));
+    options.AddPolicy("ReadWritePolicy", policy => policy.RequireClaim("readwrite"));
+});
+
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

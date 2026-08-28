@@ -52,6 +52,7 @@ namespace MyAPISolution.SampleAPI.Controllers
             }
         }
 
+        //[Authorize(Policy = "RequireAdminRole")]
         // GET api/<CategoriesController>/5
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)

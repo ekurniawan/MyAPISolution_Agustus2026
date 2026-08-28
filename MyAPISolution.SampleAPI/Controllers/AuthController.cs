@@ -171,6 +171,8 @@ namespace MyAPISolution.SampleAPI.Controllers
                 {
                     claims.Add(new Claim(ClaimTypes.Role, role));
                 }
+                claims.Add(new Claim("readonly", "true"));
+                claims.Add(new Claim("readwrite", "true"));
 
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
