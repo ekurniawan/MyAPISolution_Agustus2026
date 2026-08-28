@@ -1,7 +1,13 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using MyAPISolution.SampleAPI.DAL;
 using MyAPISolution.SampleAPI.DTO;
+using MyAPISolution.SampleAPI.Helpers;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -12,9 +18,11 @@ namespace MyAPISolution.SampleAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthDAL _authDAL;
-        public AuthController(IAuthDAL authDAL)
+        private readonly AppSettings _appSettings;
+        public AuthController(IAuthDAL authDAL, IOptions<AppSettings> appSettings)
         {
             _authDAL = authDAL;
+            _appSettings = appSettings.Value;
         }
 
         //AddUserToRole
@@ -128,7 +136,7 @@ namespace MyAPISolution.SampleAPI.Controllers
             {
                 var users = await _authDAL.GetAllUsers();
                 List<UserDTO> userDTOs = new List<UserDTO>();
-                foreach(var user in users)
+                foreach (var user in users)
                 {
                     userDTOs.Add(new UserDTO
                     {
@@ -143,6 +151,52 @@ namespace MyAPISolution.SampleAPI.Controllers
                 return BadRequest(ex.Message);
             }
         }
-    }
 
+        //login
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login([FromBody] UserLoginDTO userLoginDTO)
+        {
+            try
+            {
+                var checkLogin = await _authDAL.Login(userLoginDTO.Username, userLoginDTO.Password);
+                if (!checkLogin)
+                {
+                    return Unauthorized("Invalid username or password.");
+                }
+                List<Claim> claims = new List<Claim>();
+                claims.Add(new Claim(ClaimTypes.Name, userLoginDTO.Username));
+                //add role claims
+                var roles = await _authDAL.GetRolesFromUser(userLoginDTO.Username);
+                foreach (var role in roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(claims),
+                    Expires = DateTime.UtcNow.AddHours(12),
+                    SigningCredentials = new SigningCredentials(
+                        new SymmetricSecurityKey(key),
+                        SecurityAlgorithms.HmacSha256Signature)
+                };
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                var accountDto = new AccountDTO
+                {
+                    Username = userLoginDTO.Username,
+                    Token = tokenHandler.WriteToken(token)
+                };
+                return Ok(accountDto);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        //GetRolesFromUser
+      
+    }
 }

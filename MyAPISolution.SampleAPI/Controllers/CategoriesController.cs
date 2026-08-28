@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyAPISolution.SampleAPI.DAL;
 using MyAPISolution.SampleAPI.DTO;
@@ -8,6 +9,7 @@ using MyAPISolution.SampleAPI.Models;
 
 namespace MyAPISolution.SampleAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CategoriesController : ControllerBase
@@ -22,6 +24,7 @@ namespace MyAPISolution.SampleAPI.Controllers
         }
 
         // GET: api/<CategoriesController>
+        [Authorize(Roles = "admin")]
         [HttpGet]
         public async Task<IActionResult> Get()
         {
