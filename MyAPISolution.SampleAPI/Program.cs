@@ -22,13 +22,22 @@ builder.Services.AddAutoMapper(cfg => cfg.LicenseKey = "eyJhbGciOiJSUzI1NiIsImtp
         typeof(Program));
 
 //add identitiy 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(builder =>
+{
+    builder.Password.RequireDigit = true;
+    builder.Password.RequireLowercase = true;
+    builder.Password.RequireUppercase = true;
+    builder.Password.RequireNonAlphanumeric = true;
+    builder.Password.RequiredLength = 6;
+})
     .AddEntityFrameworkStores<RapidDbContext>()
     .AddDefaultTokenProviders();
 
 
 builder.Services.AddScoped<ICategoryDAL, CategoryDAL>();
 builder.Services.AddScoped<IProductDAL, ProductDAL>();
+
+builder.Services.AddScoped<IAuthDAL, AuthDAL>();
 
 var app = builder.Build();
 
