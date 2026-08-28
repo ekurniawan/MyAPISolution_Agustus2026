@@ -2,11 +2,12 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace MyAPISolution.SampleAPI.Models;
 
-public partial class RapidDbContext : DbContext
+public partial class RapidDbContext : IdentityDbContext
 {
     public RapidDbContext(DbContextOptions<RapidDbContext> options)
         : base(options)
@@ -26,6 +27,8 @@ public partial class RapidDbContext : DbContext
     public virtual DbSet<Wallet> Wallets { get; set; }
 
     public virtual DbSet<WalletType> WalletTypes { get; set; }
+
+    public DbSet<Pegawai> Pegawais { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -71,6 +74,7 @@ public partial class RapidDbContext : DbContext
         });
 
         OnModelCreatingPartial(modelBuilder);
+        base.OnModelCreating(modelBuilder);
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
