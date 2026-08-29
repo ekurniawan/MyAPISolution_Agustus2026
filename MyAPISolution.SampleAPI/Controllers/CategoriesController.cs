@@ -16,11 +16,13 @@ namespace MyAPISolution.SampleAPI.Controllers
     {
         private readonly ICategoryDAL _categoryDAL;
         private readonly IMapper _mapper;
+        private readonly ILogger<CategoriesController> _logger;
 
-        public CategoriesController(ICategoryDAL categoryDAL, IMapper mapper)
+        public CategoriesController(ICategoryDAL categoryDAL, IMapper mapper, ILogger<CategoriesController> logger)
         {
             _categoryDAL = categoryDAL;
             _mapper = mapper;
+            _logger = logger;
         }
  
         // GET: api/<CategoriesController>
@@ -44,10 +46,17 @@ namespace MyAPISolution.SampleAPI.Controllers
                 return Ok(categoryDTOs);*/
                 var categories = await _categoryDAL.GetAllCategories();
                 var categoryDTOs = _mapper.Map<List<CategoryDTO>>(categories);
+
+                // Example: manual business-level logging inside the controller action.
+                // Because this logger's SourceContext is under "...Controllers", it is routed
+                // to the same action log file (Logs/action-*.txt) as TransactionLoggingFilter entries.
+                _logger.LogInformation("Retrieved {Count} categories", categoryDTOs.Count);
+
                 return Ok(categoryDTOs);
             }
             catch (Exception ex)
             {
+                _logger.LogWarning(ex, "Failed to retrieve categories");
                 return BadRequest(ex.Message);
             }
         }

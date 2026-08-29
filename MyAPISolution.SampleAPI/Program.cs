@@ -1,14 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using MyAPISolution.SampleAPI.DAL;
 using MyAPISolution.SampleAPI.Filters;
 using MyAPISolution.SampleAPI.Helpers;
 using MyAPISolution.SampleAPI.Models;
 using Serilog;
+using Serilog.Filters;
 using System.Text;
 
 // Bootstrap logger: captures any startup failures before the host/config is built.
@@ -23,10 +22,32 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     // Configure Serilog from appsettings.json (Serilog section), enriched with context.
-    builder.Host.UseSerilog((context, services, configuration) => configuration
-        .ReadFrom.Configuration(context.Configuration)
-        .ReadFrom.Services(services)
-        .Enrich.FromLogContext());
+    // Split output into two files:
+    //  - System log: everything except action-log sources (framework/app diagnostics).
+    //  - Action log: TransactionLoggingFilter entries + any logger from the Controllers namespace
+    //    (so manual ILogger<T> calls inside controller actions also land in the action log).
+    builder.Host.UseSerilog((context, services, configuration) =>
+    {
+        var systemLogPath = context.Configuration["Serilog:SystemLogPath"] ?? "Logs/system-.txt";
+        var actionLogPath = context.Configuration["Serilog:ActionLogPath"] ?? "Logs/action-.txt";
+        const string outputTemplate = "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}";
+
+        static bool IsActionLogSource(Serilog.Events.LogEvent evt) =>
+            Matching.FromSource<TransactionLoggingFilter>()(evt)
+            || Matching.FromSource("MyAPISolution.SampleAPI.Controllers")(evt);
+
+        configuration
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext()
+            .WriteTo.Logger(lc => lc
+                .Filter.ByExcluding(IsActionLogSource)
+                .WriteTo.Console(outputTemplate: outputTemplate)
+                .WriteTo.File(systemLogPath, rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14, outputTemplate: outputTemplate))
+            .WriteTo.Logger(lc => lc
+                .Filter.ByIncludingOnly(IsActionLogSource)
+                .WriteTo.File(actionLogPath, rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14, outputTemplate: outputTemplate));
+    });
 
     // Add services to the container.
     builder.Services.AddControllers(options =>
