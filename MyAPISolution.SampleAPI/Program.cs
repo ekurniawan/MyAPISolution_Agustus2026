@@ -2,21 +2,42 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using MyAPISolution.SampleAPI.DAL;
+using MyAPISolution.SampleAPI.Filters;
 using MyAPISolution.SampleAPI.Helpers;
 using MyAPISolution.SampleAPI.Models;
+using Serilog;
 using System.Text;
 
-var builder = WebApplication.CreateBuilder(args);
+// Bootstrap logger: captures any startup failures before the host/config is built.
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
-// Add services to the container.
-builder.Services.AddControllers().AddJsonOptions(options =>
+try
 {
-    options.JsonSerializerOptions.PropertyNamingPolicy = null;
-});
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+    Log.Information("Starting MyAPISolution.SampleAPI");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    // Configure Serilog from appsettings.json (Serilog section), enriched with context.
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext());
+
+    // Add services to the container.
+    builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<TransactionLoggingFilter>();
+    }).AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
+    // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+    builder.Services.AddOpenApi();
 
 //add entity framework core
 builder.Services.AddDbContext<RapidDbContext>(options =>
@@ -74,6 +95,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseSerilogRequestLogging();
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
@@ -88,3 +111,12 @@ app.MapControllers();
 });*/
 
 app.Run();
+}
+catch (Exception ex) when (ex is not HostAbortedException)
+{
+    Log.Fatal(ex, "MyAPISolution.SampleAPI terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

@@ -22,7 +22,7 @@ namespace MyAPISolution.SampleAPI.Controllers
             _categoryDAL = categoryDAL;
             _mapper = mapper;
         }
-
+ 
         // GET: api/<CategoriesController>
         [Authorize(Roles = "admin")]
         [HttpGet]

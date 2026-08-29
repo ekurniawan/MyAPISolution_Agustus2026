@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="MyAPISolution.SampleAPI/MyAPISolution.SampleAPI.csproj" />
+  <Project Path="MyAPISolution.YarpGateway/MyAPISolution.YarpGateway.csproj" Id="381908e6-fb8d-4ed0-a1fe-ff640e66d49f" />
   <Project Path="MyWebAPI2/MyWebAPI2.csproj" Id="d4fc0edc-dda4-4ce3-b246-6ba257b2eaf7" />
 </Solution>
