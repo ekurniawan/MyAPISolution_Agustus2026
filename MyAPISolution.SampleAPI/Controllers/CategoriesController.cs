@@ -9,6 +9,7 @@ using MyAPISolution.SampleAPI.Models;
 
 namespace MyAPISolution.SampleAPI.Controllers
 {
+    //add manual logging sample for controller action
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
